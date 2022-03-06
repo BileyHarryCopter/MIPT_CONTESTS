@@ -4,10 +4,10 @@ int main (void)
 {
     FILE * file;
     hashmap hshmp = {};
-
     File_Open (file);
 
-    Hash_Ctor (&hshmp, file);
+    assert (Hash_Ctor (&hshmp, INITSIZE) != NULL);
+
     
 
     File_Clse (file);

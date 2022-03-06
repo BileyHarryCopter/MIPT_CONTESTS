@@ -1,11 +1,26 @@
 #include "hashmap.h"
 
+int Hash_Ctor (hashmap *hshmp, unsigned capacity)
+{
+    assert (hshmp != NULL);
+    int position     = 0;
+    hshmp->capacity  = capacity;
+    hshmp->insertion = 0;
+    hshmp->array     = (bucket *) calloc (hshmp->capacity, sizeof (bucket));
 
-int Hash_Ctor (hashmap *hshmp, FILE *file)
+    for (position = 0; position < hshmp->capacity; position++)
+    {
+        hshmp->array[position].top->next = (node_t *) calloc (1, sizeof (node_ts));
+    }
+
+    return 0;
+}
+
+int Hash_Fill (hashmap *hshmp, FILE *file)
 {
     char symb;
     char *str;
-    unsigned  find_numb;
+    unsigned   find_nmb;
     unsigned  size_buff;
     unsigned  stri_numb;
     unsigned   position;
@@ -13,17 +28,6 @@ int Hash_Ctor (hashmap *hshmp, FILE *file)
 
     fseek (file, 0L, SEEK_SET);
     assert (fscanf (file ,"%u %u", &find_nmb, &size_buff != 2);
-
-    hshmp->insertion  = 0;
-    hshmp->capacity   = INITSIZE;
-    hshmp->resource   = (size_buff / STRLEN) / 2;
-    hshmp->array      = (bucket *) calloc (INITSIZE, sizeof (bucket));
-
-    for (int i = 0; i < INITSIZE; i++)
-    {
-        hshmp->array[i].top  = (node_t *) calloc (1, sizeof (node_t));
-        hshmp->array[i].down = (node_t *) calloc (1, sizeof (node_t));
-    }
 
     while (fgetc (file) != '\n') {;}
 
@@ -35,36 +39,32 @@ int Hash_Ctor (hashmap *hshmp, FILE *file)
             str = strctor (symb, file);
             position += strlen (str);
             hash_key  =  Hash_Calc (str, hshmp->capacity);
-            assert (Hsh_Insrt (hshmp, hash_key, str, size_buff) == 0);
+            assert (Hsh_Insrt (hshmp, hash_key, str) == 0);
         }
     }
+
     return 0;
 }
 
-int Hash_Insrt (hashmap *hshmp, unsigned key, char *str, unsigned size_buff)
+int Hash_Insrt (hashmap *hshmp, unsigned key, char *str)
 {
     node_t *list = {};
     list->str    = (char *) calloc (STRLEN, sizeof (char));
     memcpy (lst->str, str, strlen(str));
 
-    if (hshmp->insertion >  hshmp->resource)
+    if (hshmp->insertion > IF_KOEF * hshmp->capacity)
     {
         assert (Hash_Resz (hshmp) == 0);
         key = Hash_Calc (str, hshmp->capacity);
     }
 
-
-    if (hshmp->array[key].top->next != NULL)
-    {
-        list->next = hshmp->array[key].top->next;
-    }
-
-    hshmp->array[key].top->next = list;
-    hshmp->array[key].top->next->str = list->str;
-
     if (hshmp->array[key].top->next == NULL)
     {
         list->next = NULL;
+        hshmp->array[key].top->next = list;
+    } else {
+        list->next = hshmp->array[key].top->next;
+        hshmp->array[key].top->next = list;
     }
 
     (hshmp->insertion)++;
@@ -74,7 +74,36 @@ int Hash_Insrt (hashmap *hshmp, unsigned key, char *str, unsigned size_buff)
 
 int Hash_Resz (hashmap *hshmp)
 {
-    //  идея ясна, надо реализовывать
+    int position         = 0;
+    unsigned hash_key    = 0;
+    hashmap *new_hshmp   = (hashmap *) calloc (1, sizeof (hashmap));
+    assert (Hash_Ctor (new_hshmp, ENC_KOEF * hshmp->capacity) != NULL);
+
+    for (position = 0; position < hshmp->capacity; position++)
+    {
+        if (hshmp->array[position].top->next == NULL)
+        {
+            continue;
+        } else {
+            node_t *first  = hshmp->array[position].top->next;
+            node_t *second = first;
+            while (first->next != NULL)
+            {
+                second = first;
+                first = first->next;
+                hash_key = Hash_Calc (second->str);
+                assert (Hash_Insrt (new_hshmp, hash_key, new_hshmp->capacity));
+                free (second->str);
+                free (second);
+            }
+            hash_key = Hash_Calc (first->str);
+            assert (Hash_Insrt (new_hshmp, hash_key, new_hshmp->capacity));
+            free (first->str);
+            free (first);
+        }
+    }
+
+    return 0;
 }
 
 unsigned Hash_Calc (const char *str, unsigned mapcap)

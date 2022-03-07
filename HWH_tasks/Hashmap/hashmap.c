@@ -1,4 +1,4 @@
-#include "hashtable.h"
+#include "hashmap.h"
 
 int Hash_Ctor (hashmap *hshmp, unsigned size_init, unsigned (*Hash_Calc)(data_t data))
 {

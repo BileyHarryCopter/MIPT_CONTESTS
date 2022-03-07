@@ -1,15 +1,15 @@
-#include "hashmap.h"
+#include "hashtable.h"
 
 int main (void)
 {
-    FILE * file;
     hashmap hshmp = {};
-    File_Open (file);
 
-    assert (Hash_Ctor (&hshmp, INITSIZE) != NULL);
+    Hash_Ctor (&hshmp, SIZE_INIT, Hash_Calc);
 
-    
+    Hash_Fill (&hshmp, "Data.txt");
+    Contest_Task (hshmp, "Data.txt");
 
-    File_Clse (file);
+    Hash_Dump (hshmp);
+    Hash_Dtor (&hshmp);
     return 0;
 }

@@ -72,8 +72,6 @@ int main (void)
         Lexs_Print (*lexus);
     else
         printf ("ERROR\n");
-        
-    fflush (stdin);
     Lexs_Delete (lexus);
     fclose (file);
     return 0;
@@ -86,7 +84,7 @@ int main (void)
 // функция вывода лексем
 lex_array_t *Lexs_Init (unsigned capacity)
 {
-    lex_array_t *lexus;
+    lex_array_t *lexus = (lex_array_t *) calloc (1, sizeof (lex_array_t));
     lexus->lexems   = (lexem_t *) calloc (capacity, sizeof (lexem_t));
     lexus->capacity = capacity;
     lexus->size     = 0;
@@ -108,7 +106,7 @@ int Lexs_Delete (lex_array_t *lexus)
     assert (lexus);
     assert (lexus->lexems);
     free   (lexus->lexems);
-
+    free   (lexus);
     return NO_ERROR;
 }
 

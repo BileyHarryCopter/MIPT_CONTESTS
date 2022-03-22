@@ -59,29 +59,22 @@ lex_array_t *Lexs_Init (unsigned capacity);
 int Lexs_Resz (lex_array_t *lexus);
 int Lexs_Delete (lex_array_t *lexus);
 int Lexs_Insrt (lex_array_t *lexus, int kind, int val);
-int Lexs_Fill (lex_array_t *lexus, FILE * file);
+int Lexs_Fill (lex_array_t *lexus);
 int Lexs_Print (lex_array_t lexus);
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 int main (void)
 {
     lex_array_t *lexus = Lexs_Init (CAP_INIT);
-    FILE * file = fopen ("text.txt", "r");
-
-    if (Lexs_Fill (lexus, file) == NO_ERROR)
+    if (Lexs_Fill (lexus) == NO_ERROR)
         Lexs_Print (*lexus);
     else
         printf ("ERROR\n");
     Lexs_Delete (lexus);
-    fclose (file);
     return 0;
 }
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-// функция пробега по чаровскому массиву
-// функция сравнения
-// функция добавления новой лексемы в массив лексем
-// функция вывода лексем
 lex_array_t *Lexs_Init (unsigned capacity)
 {
     lex_array_t *lexus = (lex_array_t *) calloc (1, sizeof (lex_array_t));
@@ -96,8 +89,7 @@ int Lexs_Resz (lex_array_t *lexus)
     assert (lexus);
     assert (lexus->lexems);
     lexus->capacity = ENCR_KF * lexus->capacity;
-    lexus->lexems   = (lexem_t *) realloc (lexus->lexems, lexus->capacity);
-
+    lexus->lexems   = (lexem_t *) realloc (lexus->lexems, lexus->capacity * sizeof (lexem_t));
     return NO_ERROR;
 }
 
@@ -129,46 +121,38 @@ int Lexs_Insrt (lex_array_t *lexus, int kind, int val)
             return ERROR;
     }
     lexus->size++;
+
     return NO_ERROR;
 }
 
-int Lexs_Fill (lex_array_t *lexus, FILE * file)
+int Lexs_Fill (lex_array_t *lexus)
 {
     int data = 0;
-    unsigned insert = 0;
-    unsigned symb, size_f, pos = 0;
-    assert (file);
+    unsigned symb = 0;
+
     assert (lexus);
 
-    fseek (file, 0L, SEEK_END);
-    size_f = ftell (file);
-    rewind (file);
-
-    while (pos < size_f)
+    while (symb != EOF)
     {
-        if (insert > KRIT_KF * lexus->capacity)
+        if (lexus->size > KRIT_KF * lexus->capacity)
             Lexs_Resz (lexus);
         assert (lexus);
         assert (lexus->lexems);
 
-        symb = fgetc (file);
-        pos++;
-        if (isspace (symb))
+        symb = getc (stdin);
+        if (isspace (symb) || symb == EOF)
             continue;
 
         if (isdigit (symb))
         {
             data = symb - '0';
-            symb = fgetc (file);
-            pos++;
+            symb = getc (stdin);
             while (isdigit (symb))
             {
                 data = data * 10 + symb - '0';
-                symb = fgetc (file);
-                pos++;
+                symb = getc (stdin);
             }
-            ungetc (symb, file);
-            pos--;
+            ungetc (symb, stdin);
             Lexs_Insrt (lexus, NUMBER, data);
         }
         else
@@ -197,8 +181,8 @@ int Lexs_Fill (lex_array_t *lexus, FILE * file)
                     return ERROR;
             }
         }
-        insert++;
     }
+
     return NO_ERROR;
 }
 
@@ -220,11 +204,11 @@ int Lexs_Print (lex_array_t lexus)
             case OPERATOR:
                 val = lexus.lexems[pos].lexm.oper;
                 if (val == ADD)
-                    printf ("ADD ");
+                    printf ("PLUS ");
                 if (val == SUB)
-                    printf ("SUB ");
+                    printf ("MINUS ");
                 if (val == MUL)
-                    printf ("MUL: ");
+                    printf ("MUL ");
                 if (val == DIV)
                     printf ("DIV ");
                 break;

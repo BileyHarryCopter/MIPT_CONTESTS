@@ -78,8 +78,33 @@ int Tree_Print (BinTree *top)
     else if (Tree_Print (top->left) == 0)
         return Tree_Print (top->right);
 }
+/*
+node_t * Tree_Ctor (data_t data)
+{
+    node_t *knot = (node_t *) calloc (1, sizeof (node_t));
+    knot->left  = NULL;
+    knot->right = NULL;
+    knot->data  = data;
+    return knot;
+}
 
-int Tree_Rec ()
+int Tree_Add (node_t *parent, int mode, data_t data)
+{
+    assert (parent);
+    node_t *knot = (node_t *) calloc (1, sizeof (node_t));
 
+    if (mode == LEFT)
+        parent->left  = knot;
+    else if (mode == RIGHT)
+        parent->right = knot;
+    else
+        return ERROR;
+
+    knot->left  = NULL;
+    knot->right = NULL;
+
+    return NO_ERROR;
+}
+*/
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//

@@ -52,7 +52,7 @@ typedef struct lexem_t
 typedef struct lexem_array_t
 {
     lexem_t         *lexems;
-    unsigned capacity, size;
+    int capacity, size;
 } lex_array_t;
 
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
@@ -67,6 +67,46 @@ int Parce_Expr (lex_array_t *lexus);
 int Parce_Mult (lex_array_t *lexus);
 int Parce_Brac (lex_array_t *lexus);
 int Parce_Lexem (lex_array_t *lexus);
+//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
+//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
+int Lexs_Print (lex_array_t lexus)
+{
+    int val, mode, pos = 0;
+    for (pos = 0; pos < lexus.size; pos++)
+    {
+        mode = lexus.lexems[pos].kind;
+        switch (mode)
+        {
+            case BRACKET:
+                val = lexus.lexems[pos].lexm.brac;
+                if (val == RIGHTBR)
+                    printf ("RBRAC ");
+                if (val == LEFTBR)
+                    printf ("LBRAC ");
+                break;
+            case OPERATOR:
+                val = lexus.lexems[pos].lexm.oper;
+                if (val == ADD)
+                    printf ("PLUS ");
+                if (val == SUB)
+                    printf ("MINUS ");
+                if (val == MUL)
+                    printf ("MUL ");
+                if (val == DIV)
+                    printf ("DIV ");
+                break;
+            case NUMBER:
+                val = lexus.lexems[pos].lexm.data;
+                printf ("NUMBER:%d ", val);
+                break;
+            default:
+                return ERROR;
+        }
+    }
+
+    printf ("\n");
+    return NO_ERROR;
+}
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 int main (void)
@@ -206,6 +246,7 @@ int Lexs_Fill (lex_array_t *lexus)
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 int Parce_Lexem (lex_array_t *lexus)
 {
+    //printf ("IN %s:\tKIND: %d and DATA: %d\n\n", __PRETTY_FUNCTION__, lexus->lexems[lexus->size].kind, lexus->lexems[lexus->size].lexm.data);
     int value = Parce_Expr (lexus);
 
     return value;
@@ -213,15 +254,15 @@ int Parce_Lexem (lex_array_t *lexus)
 
 int Parce_Expr (lex_array_t *lexus)
 {
+    int op = 0;
     int value_1 = Parce_Mult (lexus);
-
-    while (lexus->lexems[lexus->size].lexm.oper == ADD || lexus->lexems[lexus->size].lexm.oper == SUB)
+    int value_2 = 0;
+    if (lexus->lexems[lexus->size].lexm.oper == ADD || lexus->lexems[lexus->size].lexm.oper == SUB)
     {
-        int op = lexus->lexems[lexus->size].lexm.oper;
+        op = lexus->lexems[lexus->size].lexm.oper;
 
         lexus->size++;
-        int value_2 = Parce_Mult (lexus);
-
+        value_2 = Parce_Expr (lexus);
         if (op == ADD)
             value_1 += value_2;
         else if (op == SUB)
@@ -232,15 +273,15 @@ int Parce_Expr (lex_array_t *lexus)
 
 int Parce_Mult (lex_array_t *lexus)
 {
+    int op = 0;
     int value_1 = Parce_Brac (lexus);
-
-    while (lexus->lexems[lexus->size].lexm.oper == MUL || lexus->lexems[lexus->size].lexm.oper == DIV)
+    int value_2 = 0;
+    if (lexus->lexems[lexus->size].lexm.oper == MUL || lexus->lexems[lexus->size].lexm.oper == DIV)
     {
-        int op = lexus->lexems[lexus->size].lexm.oper;
+        op = lexus->lexems[lexus->size].lexm.oper;
 
         lexus->size++;
-        int value_2 = Parce_Brac (lexus);
-
+        value_2 = Parce_Mult (lexus);
         if (op == MUL)
             value_1 *= value_2;
         else if (op == DIV)
@@ -251,15 +292,23 @@ int Parce_Mult (lex_array_t *lexus)
 
 int Parce_Brac (lex_array_t *lexus)
 {
-    if (lexus->lexems[lexus->size].lexm.brac == LEFTBR)
+    int value = 0;
+    if (lexus->lexems[lexus->size].kind == BRACKET && lexus->lexems[lexus->size].lexm.brac == LEFTBR)
     {
         lexus->size++;
-        int value = Parce_Expr (lexus);
-        if (lexus->lexems[lexus->size].lexm.brac != RIGHTBR)
-            return ERROR;
+        value = Parce_Expr (lexus);
+        if (lexus->lexems[lexus->size].kind == BRACKET && lexus->lexems[lexus->size].lexm.brac != RIGHTBR)
+        {
+            printf ("ERROR\n");
+            exit (EXIT_FAILURE);
+        }
         lexus->size++;
         return value;
     }
-    else
-        return lexus->lexems[lexus->size].lexm.data;
+    else if (lexus->lexems[lexus->size].kind == NUMBER)
+    {
+        lexus->size++;
+        return lexus->lexems[lexus->size-1].lexm.data;
+    }
+    return ERROR;
 }

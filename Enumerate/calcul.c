@@ -20,7 +20,7 @@ double parce_numb (string_t *StrinG);
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 int main (void)
 {
-    string_t StrinG = {"(2+3+5)/23*23$", 0};
+    string_t StrinG = {"(2-421)$", 0};
     double ans = parce_str (&StrinG);
 
     if (ans != ans)
@@ -28,13 +28,14 @@ int main (void)
         printf ("SYNTAX ERROR\n");
         return 0;
     }
-    printf ("ANSWER : %lf\n", ans);
+    printf ("ANSWER : %.2lf\n", ans);
 	return 0;
 }
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 double parce_str (string_t *StrinG)
 {
+    printf ("in %s : %c\n", __PRETTY_FUNCTION__, StrinG->data[StrinG->pos]);
     double value = parce_expr (StrinG);
 
     if (StrinG->data[StrinG->pos] != '$')
@@ -45,6 +46,7 @@ double parce_str (string_t *StrinG)
 
 double parce_expr (string_t *StrinG)
 {
+    printf ("in %s : %c\n", __PRETTY_FUNCTION__, StrinG->data[StrinG->pos]);
     double value_1 = parce_mult (StrinG);
 
     while (StrinG->data[StrinG->pos] == '+' || StrinG->data[StrinG->pos] == '-')
@@ -64,6 +66,7 @@ double parce_expr (string_t *StrinG)
 
 double parce_mult (string_t *StrinG)
 {
+    printf ("in %s : %c\n", __PRETTY_FUNCTION__, StrinG->data[StrinG->pos]);
     double value_1 = parce_brac (StrinG);
 
     while (StrinG->data[StrinG->pos] == '*' || StrinG->data[StrinG->pos] == '/')
@@ -83,6 +86,7 @@ double parce_mult (string_t *StrinG)
 
 double parce_brac (string_t *StrinG)
 {
+    printf ("in %s : %c\n", __PRETTY_FUNCTION__, StrinG->data[StrinG->pos]);
     if (StrinG->data[StrinG->pos] == '(')
     {
         StrinG->pos++;
@@ -98,6 +102,7 @@ double parce_brac (string_t *StrinG)
 
 double parce_numb (string_t *StrinG)
 {
+    printf ("in %s : %c\n", __PRETTY_FUNCTION__, StrinG->data[StrinG->pos]);
     int length   = 0;
     char digit   = StrinG->data[StrinG->pos];
     double value = 0.0;

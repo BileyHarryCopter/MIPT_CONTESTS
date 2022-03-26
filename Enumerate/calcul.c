@@ -20,7 +20,7 @@ double parce_numb (string_t *StrinG);
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 int main (void)
 {
-    string_t StrinG = {"(2-421)$", 0};
+    string_t StrinG = {"2-1-1$", 0};
     double ans = parce_str (&StrinG);
 
     if (ans != ans)

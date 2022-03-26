@@ -2,57 +2,29 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <ctype.h>
+#include <math.h>
 
 #define KRIT_KF 0.6
 #define ENCR_KF 2
-
-enum mode_node
-{
-    FALSE = 0,
-    TRUE,
-    LEFT,
-    RIGHT
-};
-//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-            //  for array of lexems //
-//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-typedef int data_t;
 
 enum size
 {
     CAP_INIT = 100
 };
 
-typedef enum lexem_kind_t
-{
-    NO_ERROR = 0,
-    OPERATOR,
-    BRACKET,
-    NUMBER,
-    ERROR
-} lexem_kind_t;
+typedef enum lexem_kind_t {NO_ERROR = 0, OPERATOR, BRACKET, NUMBER, ENOUGH, ERROR} lexem_kind_t;
 
-typedef enum operator_t
-{
-    ADD = 10,
-    SUB,
-    MUL,
-    DIV,
-    ADD_SUB,
-    MUL_DIV
-} operator_t;
+typedef enum operator_t   {ADD      = 10, SUB, MUL, DIV}                     operator_t;
 
-typedef enum bracket_t
-{
-    LEFTBR = 20,
-    RIGHTBR
-} bracket_t;
+typedef enum bracket_t    {LEFTBR   = 20, RIGHTBR}                            bracket_t;
+
+typedef enum node_kind_t  {NODE_VAL = 30, NODE_OPER}                        node_kind_t;
 
 typedef union lexem
 {
     operator_t         oper;
     bracket_t          brac;
-    data_t             data;
+    int                data;
 } lexem;
 
 typedef struct lexem_t
@@ -67,44 +39,39 @@ typedef struct lex_array_t
     unsigned capacity, size;
 } lex_array_t;
 
-typedef struct lexer_state
+typedef struct lex_state
 {
-    lex_array_t      lexarr;
-    int             current;
-} lexer_state;
+    lex_array_t      *lexus;
+    unsigned        current;
+} lex_state;
+
+typedef union node_data_t
+{
+    operator_t        noper;
+    int                data;
+} node_data_t;
 
 typedef struct node_t
 {
-    struct node_t    *right;
     struct node_t     *left;
-    lexem_t       node_data;
+    struct node_t    *right;
+    node_data_t       ndata;
 } node_t;
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-                //      functions for working with tree       //
-//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-int Tree_Delete (node_t *top);
-//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-                //      functions for creating lex_arr       //
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 lex_array_t *Lexs_Init (unsigned capacity);
 int Lexs_Resz (lex_array_t *lexus);
 int Lexs_Delete (lex_array_t *lexus);
 int Lexs_Insrt (lex_array_t *lexus, int kind, int val);
 int Lexs_Fill (lex_array_t *lexus);
-//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-                //      functions for parcing the lex_arr    //
-//===*=======*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-lexem_t *Cur_St (lexer_state *state);
+int Lexs_Print (lex_array_t lexus);
 
-int Dump_Tree (node_t *top);
-int IS (lexer_state *lex_state, int mode);
-
-node_t *Parce_Expr (lexer_state *state);
-node_t *Parce_Mult (lexer_state *state);
-node_t *Parce_Term (lexer_state *state);
-node_t *Build_Syntax_Tree (lex_array_t lexus_ar);
-
-data_t Calc_Result (node_t *top);
+int Tree_Print (node_t * top);
+int Tree_Calculate (node_t *top);
+node_t * Build_Syntax_Tree (lex_array_t *lexus);
+node_t * Parce_Expr (lex_state * state);
+node_t * Parce_Mult (lex_state * state);
+node_t * Parce_Term (lex_state * state);
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 int main (void)
@@ -113,30 +80,20 @@ int main (void)
     lex_array_t *lexus = Lexs_Init (CAP_INIT);
     if (Lexs_Fill (lexus) == NO_ERROR)
     {
-        tree = Build_Syntax_Tree (*lexus);
+        tree = Build_Syntax_Tree (lexus);
+        if (tree == NULL)
+        {
+            printf ("ERROR\n");
+            return 0;
+        }
+        printf ("%d\n", Tree_Calculate (tree));
     }
     else
-        printf ("ERROR\n");
-	return 0;
-}
-//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-int Tree_Delete (node_t *top)
-{
-    if (!top->left && !top->right)
     {
-        free (top);
-        top->node_data.lexm.data = 0;
-        return NO_ERROR;
+        printf ("ERROR\n");
     }
-    if (top->left && !top->right)
-        return Tree_Delete (top->left);
-    if (!top->left && top->right)
-        return Tree_Delete (top->right);
-    if (top->left && top->right && Tree_Delete (top->left) == NO_ERROR)
-        return Tree_Delete (top->right);
-
-    return ERROR;
+    Lexs_Delete (lexus);
+	return 0;
 }
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
@@ -151,8 +108,8 @@ lex_array_t *Lexs_Init (unsigned capacity)
 
 int Lexs_Resz (lex_array_t *lexus)
 {
-    assert (lexus);
-    assert (lexus->lexems);
+    //assert (lexus);
+    //assert (lexus->lexems);
     lexus->capacity = ENCR_KF * lexus->capacity;
     lexus->lexems   = (lexem_t *) realloc (lexus->lexems, lexus->capacity * sizeof (lexem_t));
     return NO_ERROR;
@@ -160,8 +117,8 @@ int Lexs_Resz (lex_array_t *lexus)
 
 int Lexs_Delete (lex_array_t *lexus)
 {
-    assert (lexus);
-    assert (lexus->lexems);
+    //assert (lexus);
+    //assert (lexus->lexems);
     free   (lexus->lexems);
     free   (lexus);
     return NO_ERROR;
@@ -192,17 +149,18 @@ int Lexs_Insrt (lex_array_t *lexus, int kind, int val)
 
 int Lexs_Fill (lex_array_t *lexus)
 {
-    int data = 0;
-    unsigned symb = 0;
+    int data  = 0;
+    int symb  = 0;
+    int pos, brackets = 0;
 
-    assert (lexus);
+    //assert (lexus);
 
     while (symb != EOF)
     {
         if (lexus->size > KRIT_KF * lexus->capacity)
             Lexs_Resz (lexus);
-        assert (lexus);
-        assert (lexus->lexems);
+        //assert (lexus);
+        //assert (lexus->lexems);
 
         symb = getc (stdin);
         if (isspace (symb) || symb == EOF)
@@ -248,141 +206,230 @@ int Lexs_Fill (lex_array_t *lexus)
         }
     }
 
+    //  checking for idiot
+    for (pos = 0; pos < lexus->size; pos++)
+    {
+        if (lexus->lexems[pos].kind == BRACKET)
+        {
+            if (lexus->lexems[pos].lexm.brac == LEFTBR)
+                brackets++;
+            else if (lexus->lexems[pos].lexm.brac == RIGHTBR)
+                brackets--;
+        }
+    }
+
+    return (brackets == 0) ? NO_ERROR : ERROR;
+}
+
+int Lexs_Print (lex_array_t lexus)
+{
+    int val, mode = 0;
+    unsigned pos = 0;
+    for (pos = 0; pos < lexus.size; pos++)
+    {
+        mode = lexus.lexems[pos].kind;
+        switch (mode)
+        {
+            case BRACKET:
+                val = lexus.lexems[pos].lexm.brac;
+                if (val == RIGHTBR)
+                    printf ("RBRAC ");
+                if (val == LEFTBR)
+                    printf ("LBRAC ");
+                break;
+            case OPERATOR:
+                val = lexus.lexems[pos].lexm.oper;
+                if (val == ADD)
+                    printf ("PLUS ");
+                if (val == SUB)
+                    printf ("MINUS ");
+                if (val == MUL)
+                    printf ("MUL ");
+                if (val == DIV)
+                    printf ("DIV ");
+                break;
+            case NUMBER:
+                val = lexus.lexems[pos].lexm.data;
+                printf ("NUMBER:%d ", val);
+                break;
+            default:
+                return ERROR;
+        }
+    }
+
+    printf ("\n");
     return NO_ERROR;
 }
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-lexem_t *Cur_St (lexer_state *state)
+int Tree_Calculate (node_t *top)
 {
-    assert (state);
-    return (state->lexarr.lexems + state->current);
-}
-
-int IS (lexer_state *lex_state, int mode)
-{
-    assert (lex_state);
-    lexem_t *state = Cur_St (lex_state);
-    switch (mode)
+    int value_l  = 0;
+    int value_r  = 0;
+    int operator = 0;
+    //assert (top);
+    if (!top->left && !top->right)
     {
-        case ADD_SUB:
-            if (state->kind == OPERATOR && (state->lexm.oper == ADD || state->lexm.oper == SUB))
-                return TRUE;
-        case ADD:
-            if (state->kind == OPERATOR && state->lexm.oper == ADD)
-                return TRUE;
-        case MUL_DIV:
-            if (state->kind == OPERATOR && (state->lexm.oper == MUL || state->lexm.oper == DIV))
-                return TRUE;
-        case MUL:
-            if (state->kind == OPERATOR && state->lexm.oper == MUL)
-                return TRUE;
-        case LBRAC:
-            if (state->kind == BRACKET && state->lexm.brac == LEFTBR)
-                return TRUE;
-        case RBRAC:
-            if (state->kind == BRACKET && state->lexm.brac == RIGHTBR)
-                return TRUE;
-        case NUMBER:
-            if (state->kind == NUMBER)
-                return TRUE;
-        default:
-            return ERROR;
+        value_l = top->ndata.data;
+        free (top);
+        return value_l;
     }
+    if (top->left && top->right)
+    {
+        value_r  = Tree_Calculate (top->right);
+        value_l  = Tree_Calculate (top->left);
+        operator = top->ndata.noper;
+
+        top->left  = NULL;
+        top->right = NULL;
+
+        switch (operator)
+        {
+            case ADD:
+                top->ndata.data = value_l + value_r;
+                break;
+            case SUB:
+                top->ndata.data = value_l - value_r;
+                break;
+            case MUL:
+                top->ndata.data = value_l * value_r;
+                break;
+            case DIV:
+                top->ndata.data = value_l / value_r;
+                break;
+            default:
+                printf ("LOOK AT THIS IN %s\n", __PRETTY_FUNCTION__);
+                return ERROR;
+        }
+        return top->ndata.data;
+    }
+
+    printf ("LOOK AT THIS IN %s\n", __PRETTY_FUNCTION__);
     return ERROR;
 }
 
-node_t *Parce_Expr (lexer_state *state)
+int Tree_Print (node_t * top)
 {
-    node_t *right_part = NULL;
-    node_t *left_part  = Parce_Mult (state);
-    if (IS (state, ADD_SUB))
+    //assert (top);
+    if (!top->left && !top->right)
     {
-        operator_t oper = SUB;
-        if (IS (state, ADD))
-            oper = ADD;
+        printf ("NUMBER:%d ", top->ndata.data);
+        return NO_ERROR;
+    }
+    if (top->ndata.noper == ADD)
+        printf ("PLUS ");
+    else if (top->ndata.noper == SUB)
+        printf ("MINUS ");
+    else if (top->ndata.noper == MUL)
+        printf ("MUL ");
+    else if (top->ndata.noper == DIV)
+        printf ("DIV ");
+    if (Tree_Print (top->left) == NO_ERROR)
+        return Tree_Print (top->right);
+    return NO_ERROR;
+}
+//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
+//===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
+node_t * Build_Syntax_Tree (lex_array_t *lexus)
+{
+    node_t *top = calloc (1, sizeof (node_t));
+    lex_state state = {lexus, 0};
+
+    top = Parce_Expr (&state);
+    //assert (top);
+
+    /*
+    printf ("KIND: %d\t", state.lexus->lexems[state.current].kind);
+    if (state.lexus->lexems[state.current].kind == NUMBER)
+    {
+        printf ("VAL: %d\n", state.lexus->lexems[state.current].lexm.data);
+    }
+    printf ("\n");
+    */
+
+    return (top != NULL) ? top : NULL;
+}
+
+node_t * Parce_Expr (lex_state * state)
+{
+    //assert (state);
+    int operator = 0;
+    node_t *lbranch = Parce_Mult (state);
+    node_t *rbranch = NULL;
+    node_t *cbranch = NULL;
+
+    while (state->lexus->lexems[state->current].kind == OPERATOR &&
+    (state->lexus->lexems[state->current].lexm.oper == ADD || state->lexus->lexems[state->current].lexm.oper == SUB))
+    {
+        operator = state->lexus->lexems[state->current].lexm.oper;
         state->current++;
-        right_part = Parce_Expr (state);
-        if (right_part == NULL)
-        {
-            //  TODO: normal correcting errors
-            exit (EXIT_FAILURE);
-        }
-        node_t *expr = (node_t *) calloc (1, sizeof (node_t));
-        expr->left   = left_part;
-        expr->right  = right_part;
-        expr->node_data.kind = OPERATOR;
-        expr->node_data.lexm.oper = oper;
-        return expr;
+        rbranch = Parce_Mult (state);
+
+        if (rbranch == NULL)
+            return NULL;
+
+        cbranch = (node_t *) calloc (1, sizeof(node_t));
+        cbranch->ndata.noper = operator;
+        cbranch->left        = lbranch;
+        cbranch->right       = rbranch;
+        lbranch              = cbranch;
     }
-    return left_part;
+
+    return lbranch;
 }
 
-node_t *Parce_Mult (lexer_state *state)
+node_t * Parce_Mult (lex_state * state)
 {
-    node_t *right_part = NULL;
-    node_t *left_part  = Parce_Term (state);
-    if (IS (state, MUL_DIV))
+    //assert (state);
+    int operator = 0;
+    node_t *lbranch = Parce_Term (state);
+    node_t *rbranch = NULL;
+    node_t *cbranch = NULL;
+
+    while (state->lexus->lexems[state->current].kind == OPERATOR &&
+    (state->lexus->lexems[state->current].lexm.oper == MUL || state->lexus->lexems[state->current].lexm.oper == DIV))
     {
-        operator_t oper = DIV;
-        if (IS (state, MUL))
-            oper = MUL;
+        operator = state->lexus->lexems[state->current].lexm.oper;
         state->current++;
-        right_part = Parce_Mult (state);
-        if (right_part == NULL)
-        {
-            //  TODO: normal correcting errors
-            exit (EXIT_FAILURE);
-        }
-        node_t *mult = (node_t *) calloc (1, sizeof (node_t));
-        mult->left   = left_part;
-        mult->right  = right_part;
-        mult->node_data.kind = OPERATOR;
-        mult->node_data.lexm.oper = oper;
-        return mult;
+        rbranch = Parce_Term (state);
+
+        if (rbranch == NULL)
+            return NULL;
+
+        cbranch = (node_t *) calloc (1, sizeof(node_t));
+        cbranch->ndata.noper = operator;
+        cbranch->left        = lbranch;
+        cbranch->right       = rbranch;
+        lbranch              = cbranch;
     }
-    return left_part;
+
+    return lbranch;
 }
 
-node_t *Parce_Term (lexer_state *state)
+node_t * Parce_Term (lex_state * state)
 {
-    if (IS (state, LBRAC))
+    //assert (state);
+    node_t *tbranch = NULL;
+    if (state->lexus->lexems[state->current].kind == BRACKET && state->lexus->lexems[state->current].lexm.brac == LEFTBR)
     {
-        node_t *expr = NULL;
         state->current++;
-        expr = Parce_Expr (state);
-        if (!IS (state, RBRAC))
-        {
-            //  TODO: normal correcting errors
-            exit (EXIT_FAILURE);
-        }
-        return expr;
+        tbranch = Parce_Expr (state);
+
+        if (state->lexus->lexems[state->current].lexm.brac != RIGHTBR)
+            return NULL;
+
+        state->current++;
+        return tbranch;
     }
-    if (IS (state, NUMBER))
+    if (state->lexus->lexems[state->current].kind == NUMBER)
     {
-        node_t *term = (node_t *) calloc (1, sizeof (node_t));
-        term->node_data.lexm.data  = Cur_St (state)->lexm.data;
-        return term;
+        tbranch = (node_t *) calloc (1, sizeof (node_t));
+        tbranch->ndata.data = state->lexus->lexems[state->current].lexm.data;
+        tbranch->left       = NULL;
+        tbranch->right      = NULL;
+
+        state->current++;
+        return tbranch;
     }
-}
-
-//  building a tree by array of lexems
-node_t *Build_Syntax_Tree (lex_array_t lexus_ar)
-{
-    assert (lexus_ar.lexems);
-    int current = 0;
-    lexer_state state = {lexus_ar, current};
-    return Parce_Expr (&state);
-}
-
-//  calculatung the result by tree's way out
-data_t Calc_Result (node_t *top)
-{
-    assert (top);
-    return 0;
-}
-
-//  normal Dump of the tree
-int Dump_Tree (node_t *top)
-{
-    return 0;
+    return NULL;
 }

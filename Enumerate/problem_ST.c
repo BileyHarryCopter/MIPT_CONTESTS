@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <ctype.h>
 #include <math.h>
+
+#define NDEBUG
+#include <assert.h>
 
 #define KRIT_KF 0.6
 #define ENCR_KF 2
@@ -108,8 +110,8 @@ lex_array_t *Lexs_Init (unsigned capacity)
 
 int Lexs_Resz (lex_array_t *lexus)
 {
-    //assert (lexus);
-    //assert (lexus->lexems);
+    assert (lexus);
+    assert (lexus->lexems);
     lexus->capacity = ENCR_KF * lexus->capacity;
     lexus->lexems   = (lexem_t *) realloc (lexus->lexems, lexus->capacity * sizeof (lexem_t));
     return NO_ERROR;
@@ -117,8 +119,8 @@ int Lexs_Resz (lex_array_t *lexus)
 
 int Lexs_Delete (lex_array_t *lexus)
 {
-    //assert (lexus);
-    //assert (lexus->lexems);
+    assert (lexus);
+    assert (lexus->lexems);
     free   (lexus->lexems);
     free   (lexus);
     return NO_ERROR;
@@ -151,16 +153,17 @@ int Lexs_Fill (lex_array_t *lexus)
 {
     int data  = 0;
     int symb  = 0;
-    int pos, brackets = 0;
+    int brackets = 0;
+    unsigned pos = 0;
 
-    //assert (lexus);
+    assert (lexus);
 
     while (symb != EOF)
     {
         if (lexus->size > KRIT_KF * lexus->capacity)
             Lexs_Resz (lexus);
-        //assert (lexus);
-        //assert (lexus->lexems);
+        assert (lexus);
+        assert (lexus->lexems);
 
         symb = getc (stdin);
         if (isspace (symb) || symb == EOF)
@@ -267,7 +270,7 @@ int Tree_Calculate (node_t *top)
     int value_l  = 0;
     int value_r  = 0;
     int operator = 0;
-    //assert (top);
+    assert (top);
     if (!top->left && !top->right)
     {
         value_l = top->ndata.data;
@@ -310,7 +313,7 @@ int Tree_Calculate (node_t *top)
 
 int Tree_Print (node_t * top)
 {
-    //assert (top);
+    assert (top);
     if (!top->left && !top->right)
     {
         printf ("NUMBER:%d ", top->ndata.data);
@@ -336,23 +339,14 @@ node_t * Build_Syntax_Tree (lex_array_t *lexus)
     lex_state state = {lexus, 0};
 
     top = Parce_Expr (&state);
-    //assert (top);
-
-    /*
-    printf ("KIND: %d\t", state.lexus->lexems[state.current].kind);
-    if (state.lexus->lexems[state.current].kind == NUMBER)
-    {
-        printf ("VAL: %d\n", state.lexus->lexems[state.current].lexm.data);
-    }
-    printf ("\n");
-    */
+    assert (top);
 
     return (top != NULL) ? top : NULL;
 }
 
 node_t * Parce_Expr (lex_state * state)
 {
-    //assert (state);
+    //  assert (state);
     int operator = 0;
     node_t *lbranch = Parce_Mult (state);
     node_t *rbranch = NULL;
@@ -380,7 +374,7 @@ node_t * Parce_Expr (lex_state * state)
 
 node_t * Parce_Mult (lex_state * state)
 {
-    //assert (state);
+    //   assert (state);
     int operator = 0;
     node_t *lbranch = Parce_Term (state);
     node_t *rbranch = NULL;
@@ -408,7 +402,7 @@ node_t * Parce_Mult (lex_state * state)
 
 node_t * Parce_Term (lex_state * state)
 {
-    //assert (state);
+    //  assert (state);
     node_t *tbranch = NULL;
     if (state->lexus->lexems[state->current].kind == BRACKET && state->lexus->lexems[state->current].lexm.brac == LEFTBR)
     {
@@ -425,8 +419,6 @@ node_t * Parce_Term (lex_state * state)
     {
         tbranch = (node_t *) calloc (1, sizeof (node_t));
         tbranch->ndata.data = state->lexus->lexems[state->current].lexm.data;
-        tbranch->left       = NULL;
-        tbranch->right      = NULL;
 
         state->current++;
         return tbranch;

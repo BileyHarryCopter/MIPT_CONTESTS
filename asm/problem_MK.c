@@ -142,8 +142,6 @@ int main (int argc, char *argv[])
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
 //  adding a lexic analyze  //
 //===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*===*//
-int
-
 lex_array_t *LexsInit (unsigned capacity)
 {
     lex_array_t *lexus = (lex_array_t *) calloc (1, sizeof (lex_array_t));

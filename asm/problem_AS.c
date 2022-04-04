@@ -117,8 +117,6 @@ int main (void)
         //  LexsPrint (lexus);
         LexsPrintBin (lexus);
     }
-    else
-        printf ("You are fucking bastard!\n");
 
     LexsDelete (lexus);
     return 0;
@@ -413,7 +411,6 @@ int OperDtct (char *oper)
 
     if (istrcmp (oper, op_name[i]) == 0)
     {
-        //  printf ("%d - %s\n", MOVI, op_name[MOVI]);
         return MOVI;
     }
 
@@ -421,7 +418,6 @@ int OperDtct (char *oper)
     {
         if (istrcmp (oper, op_name[i - ADD + 1]) == 0)
         {
-            //  printf ("%d - %s\n", i - ADD + 1, op_name[i - ADD + 1]);
             return i - ADD + 1;
         }
     }

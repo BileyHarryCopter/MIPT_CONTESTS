@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -c -Wall
-CPROBLEM = AS2
+CPROBLEM = MK
 
 all: start clean
 
